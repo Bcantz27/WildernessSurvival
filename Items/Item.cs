@@ -6,12 +6,13 @@ public class Item {
 	private Texture2D _icon;
     private ItemType _itemType;
     private bool _isStackable = false;
+    private bool _isPlaceable = false;
+    private bool _isWieldable = false;
     private int _itemsInStack;
 	
 	public Item() 
     {
 		_name = "No name";
-        _itemType = ItemType.Wood;
         _itemsInStack = 1;
 	}
 	
@@ -36,6 +37,18 @@ public class Item {
     {
         get { return _isStackable; }
         set { _isStackable = value; }
+    }
+
+    public bool Placeable
+    {
+        get { return _isPlaceable; }
+        set { _isPlaceable = value; }
+    }
+
+    public bool Wieldable
+    {
+        get { return _isWieldable; }
+        set { _isWieldable = value; }
     }
 
     public int ItemsInStack
@@ -69,14 +82,9 @@ public class Item {
     public enum ItemType
     {
         //Weapons
-        Sword,
-        Axe,
-        Spear,
-        Dagger,
-        Bow,
-        Crossbow,
-        Pistol,
-        Rifle,
+        OneHanded,
+        TwoHanded,
+        OffHand,
         //Armor
         Hat,
         Shirt,
@@ -89,8 +97,7 @@ public class Item {
         Ring,
         Wrist,
         //Materials
-        Wood,
-        Stone,
-        Vine
+        Tool,
+        Material
     }
 }

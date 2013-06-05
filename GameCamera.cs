@@ -121,7 +121,6 @@ public class GameCamera : MonoBehaviour {
 			if(camButtonDown) {  //Use the input manager to make this user selectable button
 				_x += Input.GetAxis("Mouse X") * xSpeed * 0.02f;
 		        _y -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
-				Debug.Log (""+Input.GetAxis("Mouse X"));
 		 		
 		 		//y = ClampAngle(y, yMinLimit, yMaxLimit);
 		 		       

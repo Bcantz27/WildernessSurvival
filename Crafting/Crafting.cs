@@ -22,49 +22,54 @@ public class Crafting : Recipe {
         recipe.Add(26, 1);
         recipe.Add(7, 1);
         recipeList.Add(new Recipe("Stone Axe", recipe, getItemById(16)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(5, 3);
         recipeList.Add(new Recipe("Large Stone", recipe, getItemById(4)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(1, 5);
         recipe.Add(5, 10);
         recipeList.Add(new Recipe("Small Fire Pit", recipe, getItemById(17)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(1, 15);
         recipe.Add(4, 10);
         recipeList.Add(new Recipe("Large Fire Pit", recipe, getItemById(18)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(21, 1);
         recipe.Add(5, 1);
         recipe.Add(2, 1);
         recipeList.Add(new Recipe("Arrow", recipe, getItemById(24)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(20, 3);
         recipe.Add(2, 3);
         recipeList.Add(new Recipe("Bow", recipe, getItemById(22)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(20, 3);
         recipe.Add(2, 3);
         recipe.Add(1, 1);
         recipe.Add(25, 1);
-        recipeList.Add(new Recipe("Cross Bow", recipe, getItemById(22)));
-        recipe.Clear();
+        recipeList.Add(new Recipe("Cross Bow", recipe, getItemById(23)));
+        recipe = new Hashtable();
 
         recipe.Add(2, 2);
         recipe.Add(4, 1);
         recipe.Add(7, 1);
         recipeList.Add(new Recipe("Stone Hammer", recipe, getItemById(27)));
-        recipe.Clear();
+        recipe = new Hashtable();
 
         recipe.Add(4, 2);
-        recipeList.Add(new Recipe("Sharpened Rock", recipe, getItemById(26)));
-        recipe.Clear();
+        recipeList.Add(new Recipe("Sharp Rock", recipe, getItemById(26)));
+        recipe = new Hashtable();
+
+        recipe.Add(3, 4);
+        recipe.Add(7, 4);
+        recipeList.Add(new Recipe("Hide Rack", recipe, getItemById(19)));
+        recipe = new Hashtable();
 
     }
 
@@ -88,13 +93,13 @@ public class Crafting : Recipe {
                     check++;
                 }
             }
-            if (check == recipeList[i].Components.Count)
+            if (check == recipeList[i].Components.Count && check != 0)
             {
                 listofItems.Add(recipeList[i].CraftedItem);
                 Debug.Log("Item Added to Crafting List : " + recipeList[i].CraftedItem.Name.ToString());
             }
+            check = 0;
         }
-        check = 0;
         
 
         return listofItems;
@@ -147,11 +152,31 @@ public class Crafting : Recipe {
         
     }
 
+    public static bool isItemATool(int id)
+    {
+        bool tool = false;
+
+        if (id == 16 || id == 27)
+        {
+            tool = true;
+        }
+
+        return tool;
+    }
+
     public static void getRecipeItemsAndRemove(Recipe recipe)
     {
         foreach (DictionaryEntry pair in recipe.Components)
         {
-            PlayerCharacter.removeItemFromInventory(getItemById((int)pair.Key), (int)pair.Value);
+            if (!isItemATool((int)pair.Key))
+            {
+                PlayerCharacter.removeItemFromInventory(getItemById((int)pair.Key), (int)pair.Value);
+            }
+            else
+            {
+                //Take durability
+            }
+
         }
     }
 
@@ -241,22 +266,26 @@ public class Crafting : Recipe {
                 item.Name = "Stone Axe";
                 item.Id = 16;
                 item.Stackable = false;
-                item.Type = Item.ItemType.Axe;
+                item.Wieldable = true;
+                item.Type = Item.ItemType.OneHanded;
                 break;
             case 17:
                 item.Name = "Small Fire Pit";
                 item.Id = 17;
                 item.Stackable = false;
+                item.Placeable = true;
                 break;
             case 18:
                 item.Name = "Large Fire Pit";
                 item.Id = 18;
                 item.Stackable = false;
+                item.Placeable = true;
                 break;
             case 19:
                 item.Name = "Hide Rack";
                 item.Id = 19;
                 item.Stackable = false;
+                item.Placeable = true;
                 break;
             case 20:
                 item.Name = "String";
@@ -272,11 +301,15 @@ public class Crafting : Recipe {
                 item.Name = "Bow";
                 item.Id = 22;
                 item.Stackable = false;
+                item.Wieldable = true;
+                item.Type = Item.ItemType.TwoHanded;
                 break;
             case 23:
                 item.Name = "Cross Bow";
                 item.Id = 23;
                 item.Stackable = false;
+                item.Wieldable = true;
+                item.Type = Item.ItemType.TwoHanded;
                 break;
             case 24:
                 item.Name = "Arrow";
@@ -289,7 +322,7 @@ public class Crafting : Recipe {
                 item.Stackable = true;
                 break;
             case 26:
-                item.Name = "Sharpened Rock";
+                item.Name = "Sharp Rock";
                 item.Id = 26;
                 item.Stackable = true;
                 break;
@@ -297,6 +330,8 @@ public class Crafting : Recipe {
                 item.Name = "Stone Hammer";
                 item.Id = 27;
                 item.Stackable = false;
+                item.Wieldable = true;
+                item.Type = Item.ItemType.OneHanded;
                 break;
 
         }

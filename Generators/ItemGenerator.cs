@@ -52,7 +52,7 @@ public static class ItemGenerator {
 		selector = Random.Range(0,4);
 		if(selector == 0){ //Sword
 			meleeWeapon.Name = "Sword";
-			meleeWeapon.Type = Item.ItemType.Sword;
+			meleeWeapon.Type = Item.ItemType.OneHanded;
 			meleeWeapon.MaxDamage = Random.Range(5,11);
 			meleeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			meleeWeapon.TypeofDamage = DamageType.Pierce;
@@ -62,7 +62,7 @@ public static class ItemGenerator {
 			return meleeWeapon;
 		}else if(selector == 1){ //Axe
 			meleeWeapon.Name = "Axe";
-            meleeWeapon.Type = Item.ItemType.Axe;
+            meleeWeapon.Type = Item.ItemType.OneHanded;
 			meleeWeapon.MaxDamage = Random.Range(5,11);
 			meleeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			meleeWeapon.TypeofDamage = DamageType.Slash;
@@ -72,7 +72,7 @@ public static class ItemGenerator {
 			return meleeWeapon;
 		}else if(selector == 2){ // Spear
 			meleeWeapon.Name = "Spear";
-            meleeWeapon.Type = Item.ItemType.Spear;
+            meleeWeapon.Type = Item.ItemType.OneHanded;
 			meleeWeapon.MaxDamage = Random.Range(5,11);
 			meleeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			meleeWeapon.TypeofDamage = DamageType.Pierce;
@@ -82,7 +82,7 @@ public static class ItemGenerator {
 			return meleeWeapon;
 		}else if(selector == 3){ // Dagger
 			meleeWeapon.Name = "Dagger";
-            meleeWeapon.Type = Item.ItemType.Dagger;
+            meleeWeapon.Type = Item.ItemType.OneHanded;
 			meleeWeapon.MaxDamage = Random.Range(5,11);
 			meleeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			meleeWeapon.TypeofDamage = DamageType.Slash;
@@ -107,7 +107,7 @@ public static class ItemGenerator {
 		int selector = Random.Range(0,6);
 		if(selector == 0 || selector == 1){ //Bow
 			rangeWeapon.Name = "Bow";
-            rangeWeapon.Type = Item.ItemType.Bow;
+            rangeWeapon.Type = Item.ItemType.TwoHanded;
 			rangeWeapon.MaxDamage = Random.Range(5,11);
 			rangeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			rangeWeapon.TypeofDamage = DamageType.Ranged;
@@ -117,7 +117,7 @@ public static class ItemGenerator {
 			return rangeWeapon;
 		}else if(selector == 2 || selector == 3){ //Crossbow
 			rangeWeapon.Name = "Crossbow";
-            rangeWeapon.Type = Item.ItemType.Crossbow;
+            rangeWeapon.Type = Item.ItemType.TwoHanded;
 			rangeWeapon.MaxDamage = Random.Range(5,11);
 			rangeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			rangeWeapon.TypeofDamage = DamageType.Ranged;
@@ -127,7 +127,7 @@ public static class ItemGenerator {
 			return rangeWeapon;
 		}else if(selector == 4){ //Pistol
 			rangeWeapon.Name = "Pistol";
-            rangeWeapon.Type = Item.ItemType.Pistol;
+            rangeWeapon.Type = Item.ItemType.OneHanded;
 			rangeWeapon.MaxDamage = Random.Range(5,11);
 			rangeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			rangeWeapon.TypeofDamage = DamageType.RangedPierce;
@@ -137,7 +137,7 @@ public static class ItemGenerator {
 			return rangeWeapon;
 		}else if(selector == 5){ // Rifle
 			rangeWeapon.Name = "Rifle";
-            rangeWeapon.Type = Item.ItemType.Rifle;
+            rangeWeapon.Type = Item.ItemType.TwoHanded;
 			rangeWeapon.MaxDamage = Random.Range(5,11);
 			rangeWeapon.DamageVariance = Random.Range(.2f,.76f);
 			rangeWeapon.TypeofDamage = DamageType.RangedPierce;
@@ -237,7 +237,6 @@ public static class ItemGenerator {
         if (treeType == CutTree.TreeType.Oak)
         {
             Log.Name = "Oak Log";
-            Log.Type = Item.ItemType.Wood;
             Log.Stackable = true;
             Log.ItemsInStack = amount;
             return Log;
@@ -245,7 +244,6 @@ public static class ItemGenerator {
         else
         {
             Log.Name = "Oak Log";
-            Log.Type = Item.ItemType.Wood;
             Log.Stackable = true;
             Log.ItemsInStack = amount;
             return Log;

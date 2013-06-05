@@ -41,8 +41,11 @@ public class myGUI : MonoBehaviour {
     //*****************************************/
     private bool _displayCraftingWindow = false;
     private const int CRAFTING_WINDOW_ID = 3;
-    private Rect _craftingWindowRect = new Rect(10, 10, 170, 265);
+    private Rect _craftingWindowRect = new Rect(10, 10, 170, 500);
     private List<Item> craftableItems;
+    private Vector2 _craftingWindowSlider = Vector2.zero;
+    private int _craftingButtonWidth = 150;
+    private int _craftingButtonHeight = 40;
 
 	
 	//*****************************************//
@@ -144,10 +147,13 @@ public class myGUI : MonoBehaviour {
         {
             _displayCraftingWindow = false;
         }
+        _craftingWindowSlider = GUI.BeginScrollView(new Rect(10, 30, _craftingWindowRect.width - 10, (_craftingButtonHeight * craftableItems.Count) + _craftingWindowRect.height), _craftingWindowSlider, new Rect(10, 40, _craftingButtonWidth - 20, _craftingWindowRect.height));
+
 
         for (int i = 0; i < craftableItems.Count; i++)
         {
-            if (GUI.Button(new Rect(10, 20 + (32 * i), 96, 32),""))
+            GUI.Label(new Rect(20, 45 + (32 * i), _craftingWindowRect.width - 30, 24), "Craft: " + craftableItems[i].Name.ToString());
+            if (GUI.Button(new Rect(10, 40 + (32 * i), _craftingWindowRect.width - 30, 32), ""))
             {
                 for (int j = 0; j < Crafting.recipeList.Count; j++)
                 {
@@ -161,7 +167,7 @@ public class myGUI : MonoBehaviour {
                 }
             }
         }
-
+        GUI.EndScrollView();
         GUI.DragWindow();
     }
 
@@ -180,12 +186,7 @@ public class myGUI : MonoBehaviour {
 							if(Time.time - _doubleClickTimer < DOUBLE_CLICK_TIMER_THRESHHOLD){
 								#region DoubleClick Selectors
 								switch(_selectedItem.Type){
-									case Item.ItemType.Sword:
-                                    case Item.ItemType.Axe:
-                                    case Item.ItemType.Spear:
-                                    case Item.ItemType.Crossbow:
-                                    case Item.ItemType.Pistol:
-                                    case Item.ItemType.Dagger:
+                                    case Item.ItemType.OneHanded:
 										if(PlayerCharacter.RightHand == null){
 											PlayerCharacter.RightHand = PlayerCharacter.Inventory[cnt];
 											PlayerCharacter.Inventory.RemoveAt(cnt);
@@ -197,8 +198,7 @@ public class myGUI : MonoBehaviour {
 											PlayerCharacter.Inventory[cnt] = temp;
 										}
 									break;
-									case Item.ItemType.Rifle:
-                                    case Item.ItemType.Bow:
+                                    case Item.ItemType.TwoHanded:
 										if(PlayerCharacter.RightHand == null && PlayerCharacter.LeftHand == null){
 											PlayerCharacter.RightHand = PlayerCharacter.Inventory[cnt];
 											PlayerCharacter.LeftHand = new Item();
@@ -209,6 +209,21 @@ public class myGUI : MonoBehaviour {
 											
 										}
 									break;
+                                    case Item.ItemType.OffHand:
+                                    if (PlayerCharacter.LeftHand == null)
+                                    {
+                                        PlayerCharacter.LeftHand = PlayerCharacter.Inventory[cnt];
+                                        PlayerCharacter.Inventory.RemoveAt(cnt);
+                                        _doubleClickTimer = 0;
+                                        _selectedItem = null;
+                                    }
+                                    else
+                                    {
+                                        Item temp = PlayerCharacter.LeftHand;
+                                        PlayerCharacter.LeftHand = PlayerCharacter.Inventory[cnt];
+                                        PlayerCharacter.Inventory[cnt] = temp;
+                                    }
+                                    break;
 									case Item.ItemType.Hat:
 										if(PlayerCharacter.Head == null){
 											PlayerCharacter.Head = PlayerCharacter.Inventory[cnt];
@@ -350,9 +365,10 @@ public class myGUI : MonoBehaviour {
 
     public void ToggleCraftingWindow()
     {
-        Crafting.givePlayerItem(1, 2);
-        Crafting.givePlayerItem(2, 1);
-        Crafting.givePlayerItem(3, 1);
+        Crafting.givePlayerItem(1, 20);
+        Crafting.givePlayerItem(2, 20);
+        Crafting.givePlayerItem(5, 20);
+        Crafting.givePlayerItem(7, 20);
         if (_displayCraftingWindow)
         {
             craftableItems = Crafting.getCraftableItems(PlayerCharacter.Inventory);
