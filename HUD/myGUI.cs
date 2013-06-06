@@ -36,6 +36,19 @@ public class myGUI : MonoBehaviour {
 	private const float DOUBLE_CLICK_TIMER_THRESHHOLD = .5f;
 	private Item _selectedItem;
 
+    private bool placingObject = false;
+    private Vector3 screenPoint;
+    private Vector3 offset;
+    private bool createdObject = false;
+    private bool dragging = false;
+    private GameObject placeableObject;
+    private GameObject draggingObj;
+    private Item placeableItem;
+
+    private RaycastHit hit;
+    private Ray ray;
+
+
     //*****************************************//
     /*  Crafting Window Vars
     //*****************************************/
@@ -80,6 +93,12 @@ public class myGUI : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        if (dragging)
+        {
+            OnMouseDrag();
+        }
+        dragDetectionForPlacing(placeableItem);
+
 	}
 	
 	void OnGUI(){
@@ -171,6 +190,39 @@ public class myGUI : MonoBehaviour {
         GUI.DragWindow();
     }
 
+    public void dragDetectionForPlacing(Item item)
+    {
+        if (Input.GetMouseButtonDown(0) && placingObject)
+        {
+            if (!dragging)
+            {
+                placeableObject = Resources.Load("Placeables/" + item.Name.ToString()) as GameObject;
+                draggingObj = GameObject.Instantiate(placeableObject) as GameObject;
+                Debug.Log("OBJ");
+                dragging = true;
+            }
+        }
+
+        if (Input.GetMouseButtonUp(0) && dragging)
+        {
+            dragging = false;
+        }
+    }
+
+
+    private void OnMouseDrag()
+    {
+        ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out hit, 25) && hit.collider.GetType() == typeof(TerrainCollider))
+        {
+            Debug.DrawLine(ray.origin, hit.point);
+            if (draggingObj != null)
+            {
+                draggingObj.transform.position = hit.point;
+            }
+        }
+    }
+
     public void InventoryWindow(int id)
     {
 		GUI.skin = mySkin;
@@ -180,8 +232,30 @@ public class myGUI : MonoBehaviour {
 		for(int y = 0; y < _inventoryRows; y++){
 			for(int x = 0; x < _inventoryCols; x++){
 				if(cnt < PlayerCharacter.Inventory.Count){
+                    Rect rect = new Rect(5 + (x * buttonWidth), 20 + (y * buttonHeight), buttonWidth, buttonHeight);
+                    if (rect.Contains(Event.current.mousePosition))
+                    {
+                        if (PlayerCharacter.Inventory[cnt].Placeable)
+                        {
+                            if (!placingObject)
+                            {
+                                Debug.Log("Place now");
+                                placingObject = true;
+                                placeableItem = PlayerCharacter.Inventory[cnt];
+                            }
+                        }
+                        else
+                        {
+                            if (placingObject)
+                            {
+                                placingObject = false;
+                            }
+                        }
+                    }
+
                     if (GUI.Button(new Rect(5 + (x * buttonWidth), 20 + (y * buttonHeight), buttonWidth, buttonHeight), new GUIContent(PlayerCharacter.Inventory[cnt].Icon, PlayerCharacter.Inventory[cnt].ToolTip()), getSlotSkin()))
                     {
+
 						if(_doubleClickTimer != 0 && _selectedItem != null){
 							if(Time.time - _doubleClickTimer < DOUBLE_CLICK_TIMER_THRESHHOLD){
 								#region DoubleClick Selectors

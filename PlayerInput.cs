@@ -3,7 +3,9 @@ using System.Collections;
 
 [RequireComponent (typeof(Movement))]
 public class PlayerInput : MonoBehaviour {
-	bool singleplayer;
+
+	private bool singleplayer;
+
 	// Use this for initialization
 	void Start () {
 		if(GameObject.Find ("_GameSettings").GetComponent<GameSettings>().Mode == 1){
@@ -12,10 +14,12 @@ public class PlayerInput : MonoBehaviour {
 			singleplayer = false;
 		}
 	}
+
 	
 	// Update is called once per frame
 	void Update () {
 		if(!singleplayer && networkView.isMine){
+
 			if(Input.GetButtonUp("Toggle Inventory")){
 				Messenger.Broadcast("ToggleInventory");
 			}

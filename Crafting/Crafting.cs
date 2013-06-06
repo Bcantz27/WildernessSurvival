@@ -87,7 +87,7 @@ public class Crafting : Recipe {
         {
             foreach (DictionaryEntry pair in recipeList[i].Components)
             {
-                Debug.Log("Key : " + pair.Key.ToString() + " Value : " + pair.Value.ToString());
+               // Debug.Log("Key : " + pair.Key.ToString() + " Value : " + pair.Value.ToString());
                 if (PlayerCharacter.checkInventoryForItem((int)pair.Key, (int)pair.Value))
                 {
                     check++;
@@ -96,7 +96,7 @@ public class Crafting : Recipe {
             if (check == recipeList[i].Components.Count && check != 0)
             {
                 listofItems.Add(recipeList[i].CraftedItem);
-                Debug.Log("Item Added to Crafting List : " + recipeList[i].CraftedItem.Name.ToString());
+                //Debug.Log("Item Added to Crafting List : " + recipeList[i].CraftedItem.Name.ToString());
             }
             check = 0;
         }
@@ -211,6 +211,7 @@ public class Crafting : Recipe {
                 item.Name = "Small Rock";
                 item.Id = 5;
                 item.Stackable = true;
+                item.Placeable = true;
                 break;
             case 6:
                 item.Name = "Flint";
