@@ -139,9 +139,17 @@ public class Crafting : Recipe {
         {
             if (PlayerCharacter.Inventory[i].Id == wantedItem.Id)
             {
-                if (amount < wantedItem.ItemsInStack && wantedItem.Stackable)
+                if (wantedItem.Stackable)
                 {
-                    wantedItem.ItemsInStack -= amount;
+                    if (amount < wantedItem.ItemsInStack)
+                    {
+                        wantedItem.ItemsInStack -= amount;
+                    }
+                    else
+                    {
+                        PlayerCharacter.Inventory.RemoveAt(i);
+                    }
+                    
                 }
                 else
                 {
@@ -211,7 +219,6 @@ public class Crafting : Recipe {
                 item.Name = "Small Rock";
                 item.Id = 5;
                 item.Stackable = true;
-                item.Placeable = true;
                 break;
             case 6:
                 item.Name = "Flint";

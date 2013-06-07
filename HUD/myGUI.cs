@@ -9,7 +9,8 @@ public class myGUI : MonoBehaviour {
 	public float buttonHeight = 40;
 	public float closeButtonWidth = 20;
 	public float closeButtonHeight = 20;
-	
+
+    private Vector2 mousePos;
 	private float _offset = 10;
 	//*****************************************//
 	/*  Loot window Vars
@@ -36,10 +37,6 @@ public class myGUI : MonoBehaviour {
 	private const float DOUBLE_CLICK_TIMER_THRESHHOLD = .5f;
 	private Item _selectedItem;
 
-    private bool placingObject = false;
-    private Vector3 screenPoint;
-    private Vector3 offset;
-    private bool createdObject = false;
     private bool dragging = false;
     private GameObject placeableObject;
     private GameObject draggingObj;
@@ -97,7 +94,7 @@ public class myGUI : MonoBehaviour {
         {
             OnMouseDrag();
         }
-        dragDetectionForPlacing(placeableItem);
+        dragDetection();
 
 	}
 	
@@ -190,22 +187,38 @@ public class myGUI : MonoBehaviour {
         GUI.DragWindow();
     }
 
-    public void dragDetectionForPlacing(Item item)
+    public void dragDetection()
     {
-        if (Input.GetMouseButtonDown(0) && placingObject)
+        if (Input.GetMouseButtonDown(0))
         {
-            if (!dragging)
+            if (!dragging && _inventoryWindowRect.Contains(Input.mousePosition) && placeableItem != null)
             {
-                placeableObject = Resources.Load("Placeables/" + item.Name.ToString()) as GameObject;
+                placeableObject = Resources.Load("Placeables/" + placeableItem.Name.ToString()) as GameObject;
                 draggingObj = GameObject.Instantiate(placeableObject) as GameObject;
                 Debug.Log("OBJ");
                 dragging = true;
             }
         }
 
-        if (Input.GetMouseButtonUp(0) && dragging)
+        if (Input.GetMouseButtonUp(0))
         {
-            dragging = false;
+                if (dragging && placeableItem != null)
+                {
+                    Crafting.removePlayerItem(placeableItem.Id, 1);
+                    placeableItem = null;
+                    dragging = false;
+                     if (_inventoryWindowRect.Contains(Input.mousePosition))
+                     {
+                         //Do Item Dragging here
+                         Destroy(draggingObj);
+                     }
+                     else
+                     {
+                         draggingObj = null;
+                         placeableObject = null;
+                     }
+                }
+
         }
     }
 
@@ -218,6 +231,7 @@ public class myGUI : MonoBehaviour {
             Debug.DrawLine(ray.origin, hit.point);
             if (draggingObj != null)
             {
+                draggingObj.transform.up = hit.normal;
                 draggingObj.transform.position = hit.point;
             }
         }
@@ -237,18 +251,10 @@ public class myGUI : MonoBehaviour {
                     {
                         if (PlayerCharacter.Inventory[cnt].Placeable)
                         {
-                            if (!placingObject)
+                            if (placeableItem == null)
                             {
                                 Debug.Log("Place now");
-                                placingObject = true;
                                 placeableItem = PlayerCharacter.Inventory[cnt];
-                            }
-                        }
-                        else
-                        {
-                            if (placingObject)
-                            {
-                                placingObject = false;
                             }
                         }
                     }
