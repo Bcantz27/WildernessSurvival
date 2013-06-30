@@ -23,6 +23,12 @@ public class PlayerInput : MonoBehaviour {
 			if(Input.GetButtonUp("Toggle Inventory")){
 				Messenger.Broadcast("ToggleInventory");
 			}
+
+            if (Input.GetButtonUp("SpawnMob"))
+            {
+                Debug.Log("Spawned");
+                Messenger<int,int,int>.Broadcast("spawn mob at loc", 1, 476,1292);
+            }
 			
 			if(Input.GetButtonUp("Toggle Character Window")){
 				Messenger.Broadcast("ToggleCharacter");
@@ -92,6 +98,11 @@ public class PlayerInput : MonoBehaviour {
 			if(Input.GetButtonUp("Toggle Inventory")){
 				Messenger.Broadcast("ToggleInventory");
 			}
+
+            if (Input.GetButtonUp("SpawnMob"))
+            {
+                Messenger<int, int, int>.Broadcast("spawn mob at loc", 0, 476, 1292);
+            }
 			
 			if(Input.GetButtonUp("Toggle Character Window")){
 				Messenger.Broadcast("ToggleCharacter");

@@ -18,57 +18,57 @@ public class Crafting : Recipe {
         Hashtable recipe = new Hashtable();
         recipeList = new List<Recipe>();
 
-        recipe.Add(2, 2);
-        recipe.Add(26, 1);
-        recipe.Add(7, 1);
-        recipeList.Add(new Recipe("Stone Axe", recipe, getItemById(16)));
+        recipe.Add(ItemName.TreeBranch, 2);
+        recipe.Add(ItemName.SharpRock, 1);
+        recipe.Add(ItemName.Vine, 1);
+        recipeList.Add(new Recipe("Stone Axe", recipe, getItem(ItemName.StoneAxe)));
         recipe = new Hashtable();
 
-        recipe.Add(5, 3);
-        recipeList.Add(new Recipe("Large Stone", recipe, getItemById(4)));
+        recipe.Add(ItemName.SmallRock, 3);
+        recipeList.Add(new Recipe("Large Rock", recipe, getItem(ItemName.LargeRock)));
         recipe = new Hashtable();
 
-        recipe.Add(1, 5);
-        recipe.Add(5, 10);
-        recipeList.Add(new Recipe("Small Fire Pit", recipe, getItemById(17)));
+        recipe.Add(ItemName.WoodLog, 5);
+        recipe.Add(ItemName.SmallRock, 10);
+        recipeList.Add(new Recipe("Small Fire Pit", recipe, getItem(ItemName.SmallFirePit)));
         recipe = new Hashtable();
 
-        recipe.Add(1, 15);
-        recipe.Add(4, 10);
-        recipeList.Add(new Recipe("Large Fire Pit", recipe, getItemById(18)));
+        recipe.Add(ItemName.WoodLog, 10);
+        recipe.Add(ItemName.LargeRock, 10);
+        recipeList.Add(new Recipe("Large Fire Pit", recipe, getItem(ItemName.LargeFirePit)));
         recipe = new Hashtable();
 
-        recipe.Add(21, 1);
-        recipe.Add(5, 1);
-        recipe.Add(2, 1);
-        recipeList.Add(new Recipe("Arrow", recipe, getItemById(24)));
+        recipe.Add(ItemName.Feather, 1);
+        recipe.Add(ItemName.SmallRock, 1);
+        recipe.Add(ItemName.TreeBranch, 1);
+        recipeList.Add(new Recipe("Arrow", recipe, getItem(ItemName.Arrow)));
         recipe = new Hashtable();
 
-        recipe.Add(20, 3);
-        recipe.Add(2, 3);
-        recipeList.Add(new Recipe("Bow", recipe, getItemById(22)));
+        recipe.Add(ItemName.String, 3);
+        recipe.Add(ItemName.TreeBranch, 3);
+        recipeList.Add(new Recipe("Bow", recipe, getItem(ItemName.Bow)));
         recipe = new Hashtable();
 
-        recipe.Add(20, 3);
-        recipe.Add(2, 3);
-        recipe.Add(1, 1);
-        recipe.Add(25, 1);
-        recipeList.Add(new Recipe("Cross Bow", recipe, getItemById(23)));
+        recipe.Add(ItemName.String, 3);
+        recipe.Add(ItemName.TreeBranch, 3);
+        recipe.Add(ItemName.WoodLog, 1);
+        recipe.Add(ItemName.Horn, 1);
+        recipeList.Add(new Recipe("Cross Bow", recipe, getItem(ItemName.Crossbow)));
         recipe = new Hashtable();
 
-        recipe.Add(2, 2);
-        recipe.Add(4, 1);
-        recipe.Add(7, 1);
-        recipeList.Add(new Recipe("Stone Hammer", recipe, getItemById(27)));
+        recipe.Add(ItemName.TreeBranch, 1);
+        recipe.Add(ItemName.LargeRock, 1);
+        recipe.Add(ItemName.Vine, 2);
+        recipeList.Add(new Recipe("Stone Hammer", recipe, getItem(ItemName.StoneHammer)));
         recipe = new Hashtable();
 
-        recipe.Add(4, 2);
-        recipeList.Add(new Recipe("Sharp Rock", recipe, getItemById(26)));
+        recipe.Add(ItemName.LargeRock, 2);
+        recipeList.Add(new Recipe("Sharp Rock", recipe, getItem(ItemName.SharpRock)));
         recipe = new Hashtable();
 
-        recipe.Add(3, 4);
-        recipe.Add(7, 4);
-        recipeList.Add(new Recipe("Hide Rack", recipe, getItemById(19)));
+        recipe.Add(ItemName.WoodPlank, 4);
+        recipe.Add(ItemName.Vine, 4);
+        recipeList.Add(new Recipe("Hide Rack", recipe, getItem(ItemName.HideRack)));
         recipe = new Hashtable();
 
     }
@@ -105,13 +105,13 @@ public class Crafting : Recipe {
         return listofItems;
     }
 
-    public static void givePlayerItem(int id, int amount)
+    public static void givePlayerItem(ItemName item, int amount)
     {
         Item wantedItem = new Item();
         bool added = false;
 
-        wantedItem = getItemById(id);
-        if (wantedItem.Stackable && amount > 1)
+        wantedItem = getItem(item);
+        if (wantedItem.Stackable && amount >= 1)
         {
             wantedItem.ItemsInStack = amount;
         }
@@ -130,10 +130,10 @@ public class Crafting : Recipe {
         }
     }
 
-    public static void removePlayerItem(int id, int amount)
+    public static void removePlayerItem(ItemName item, int amount)
     {
         Item wantedItem = new Item();
-        wantedItem = getItemById(id);
+        wantedItem = getItem(item);
 
         for (int i = 0; i < PlayerCharacter.Inventory.Count; i++)
         {
@@ -141,9 +141,9 @@ public class Crafting : Recipe {
             {
                 if (wantedItem.Stackable)
                 {
-                    if (amount < wantedItem.ItemsInStack)
+                    if (amount < PlayerCharacter.Inventory[i].ItemsInStack)
                     {
-                        wantedItem.ItemsInStack -= amount;
+                        PlayerCharacter.Inventory[i].ItemsInStack -= amount;
                     }
                     else
                     {
@@ -178,7 +178,7 @@ public class Crafting : Recipe {
         {
             if (!isItemATool((int)pair.Key))
             {
-                PlayerCharacter.removeItemFromInventory(getItemById((int)pair.Key), (int)pair.Value);
+                PlayerCharacter.removeItemFromInventory(getItem((ItemName)pair.Key), (int)pair.Value);
             }
             else
             {
@@ -189,162 +189,219 @@ public class Crafting : Recipe {
     }
 
 
-    public static Item getItemById(int id)
+    public static Item getItem(ItemName itemname)
     {
         Item item = new Item();
+        float[] temp = { 0, 0, 0, 0 };
 
-        switch (id)
+        switch (itemname)
         {
-            case 1:
+            case ItemName.WoodLog:
                 item.Name = "Wood Log";
-                item.Id = 1;
                 item.Stackable = true;
                 break;
-            case 2:
+            case ItemName.TreeBranch:
                 item.Name = "Tree Branch";
-                item.Id = 2;
                 item.Stackable = true;
                 break;
-            case 3:
+            case ItemName.WoodPlank:
                 item.Name = "Wood Plank";
-                item.Id = 3;
                 item.Stackable = true;
                 break;
-            case 4:
+            case ItemName.LargeRock:
                 item.Name = "Large Rock";
-                item.Id = 4;
                 item.Stackable = true;
                 break;
-            case 5:
+            case ItemName.SmallRock:
                 item.Name = "Small Rock";
-                item.Id = 5;
                 item.Stackable = true;
                 break;
-            case 6:
+            case ItemName.Flint:
                 item.Name = "Flint";
-                item.Id = 6;
                 item.Stackable = true;
                 break;
-            case 7:
+            case ItemName.Vine:
                 item.Name = "Vine";
-                item.Id = 7;
+                item.Icon = Resources.Load("ItemIcons/" + item.Name + ".jpg") as Texture2D;
                 item.Stackable = true;
                 break;
-            case 8:
+            case ItemName.RabbitFur:
                 item.Name = "Rabbit Fur";
-                item.Id = 8;
                 item.Stackable = true;
                 break;
-            case 9:
+            case ItemName.FoxFur:
                 item.Name = "Fox Fur";
-                item.Id = 9;
                 item.Stackable = true;
                 break;
-            case 10:
-                item.Name = "Cow Hide";
-                item.Id = 10;
+            case ItemName.WolfFur:
+                item.Name = "Wolf Fur";
                 item.Stackable = true;
                 break;
-            case 11:
-                item.Name = "Buffalo Hide";
-                item.Id = 11;
+            case ItemName.BearFur:
+                item.Name = "Bear Fur";
                 item.Stackable = true;
                 break;
-            case 12:
+            case ItemName.DeerHide:
                 item.Name = "Deer Hide";
-                item.Id = 12;
                 item.Stackable = true;
                 break;
-            case 13:
+            case ItemName.ElkHide:
                 item.Name = "Elk Hide";
-                item.Id = 13;
                 item.Stackable = true;
                 break;
-            case 14:
-                item.Name = "Alligator Hide";
-                item.Id = 14;
-                item.Stackable = true;
-                break;
-            case 15:
-                item.Name = "Sheep Hide";
-                item.Id = 15;
-                item.Stackable = true;
-                break;
-            case 16:
+            case ItemName.StoneAxe:
                 item.Name = "Stone Axe";
-                item.Id = 16;
                 item.Stackable = false;
                 item.Wieldable = true;
                 item.Type = Item.ItemType.OneHanded;
                 break;
-            case 17:
+            case ItemName.SmallFirePit:
                 item.Name = "Small Fire Pit";
-                item.Id = 17;
                 item.Stackable = false;
                 item.Placeable = true;
                 break;
-            case 18:
+            case ItemName.LargeFirePit:
                 item.Name = "Large Fire Pit";
-                item.Id = 18;
                 item.Stackable = false;
                 item.Placeable = true;
                 break;
-            case 19:
+            case ItemName.HideRack:
                 item.Name = "Hide Rack";
-                item.Id = 19;
                 item.Stackable = false;
                 item.Placeable = true;
                 break;
-            case 20:
+            case ItemName.String:
                 item.Name = "String";
-                item.Id = 20;
                 item.Stackable = true;
                 break;
-            case 21:
+            case ItemName.Feather:
                 item.Name = "Feather";
-                item.Id = 21;
                 item.Stackable = true;
                 break;
-            case 22:
+            case ItemName.Bow:
                 item.Name = "Bow";
-                item.Id = 22;
                 item.Stackable = false;
                 item.Wieldable = true;
+                item.Icon = Resources.Load("Item Icons/" + item.Name +".jpg") as Texture2D;
                 item.Type = Item.ItemType.TwoHanded;
                 break;
-            case 23:
+            case ItemName.Crossbow:
                 item.Name = "Cross Bow";
-                item.Id = 23;
                 item.Stackable = false;
                 item.Wieldable = true;
                 item.Type = Item.ItemType.TwoHanded;
                 break;
-            case 24:
+            case ItemName.Arrow:
                 item.Name = "Arrow";
-                item.Id = 24;
                 item.Stackable = true;
                 break;
-            case 25:
+            case ItemName.Horn:
                 item.Name = "Horn";
-                item.Id = 25;
                 item.Stackable = true;
                 break;
-            case 26:
+            case ItemName.Antler:
+                item.Name = "Antler";
+                item.Stackable = true;
+                break;
+            case ItemName.Tooth:
+                item.Name = "Tooth";
+                item.Stackable = true;
+                break;
+            case ItemName.SharpRock:
                 item.Name = "Sharp Rock";
-                item.Id = 26;
                 item.Stackable = true;
                 break;
-            case 27:
+            case ItemName.StoneHammer:
                 item.Name = "Stone Hammer";
-                item.Id = 27;
                 item.Stackable = false;
                 item.Wieldable = true;
                 item.Type = Item.ItemType.OneHanded;
+                break;
+            case ItemName.SmallBone:
+                item.Name = "Small Bone";
+                item.Stackable = true;
+                item.Wieldable = false;
+                break;
+            case ItemName.LargeBone:
+                item.Name = "Large Bone";
+                item.Stackable = true;
+                item.Wieldable = false;
+                break;
+            case ItemName.Apple:
+                temp = new float[] {10,2,5,0};              //{Health,Energy,Hunger,Thrist}
+                item = new Food(25,0.5f,0.3f,temp);
+                item.Type = Item.ItemType.Food;
+                item.Name = "Apple";
+                item.Stackable = true;
+                item.Wieldable = false;
+                break;
+            case ItemName.Steak:
+                temp = new float[] { 30, 20, 75, 0 };
+                item = new Food(0, 40f, 60f, temp);
+                item.Type = Item.ItemType.Food;
+                item.Name = "Steak";
+                item.Stackable = true;
+                item.Wieldable = false;
+                break;
+            case ItemName.RawMeat:
+                temp = new float[] { 1, 1, 1, 0 };
+                item = new Food(0, 2f, 3f, temp);
+                item.Type = Item.ItemType.Food;
+                item.Name = "Raw Meat";
+                item.Stackable = true;
+                item.Wieldable = false;
+                break;
+            case ItemName.Berries:
+                temp = new float[] { 2, 1, 5, 0 };           
+                item = new Food(11, 1, 0, temp);
+                item.Type = Item.ItemType.Food;
+                item.Name = "Berries";
+                item.Stackable = true;
+                item.Wieldable = false;
                 break;
 
         }
 
+        item.Id = (int)itemname;
+
         return item;
+    }
+
+    public enum ItemName
+    {
+        WoodLog,
+        WoodPlank,
+        TreeBranch,
+        LargeRock,
+        SmallRock,
+        SharpRock,
+        Flint,
+        Vine,
+        RabbitFur,
+        FoxFur,
+        WolfFur,
+        BearFur,
+        DeerHide,
+        ElkHide,
+        StoneAxe,
+        StoneHammer,
+        SmallFirePit,
+        LargeFirePit,
+        HideRack,
+        String,
+        Feather,
+        Bow,
+        Crossbow,
+        Arrow,
+        Horn,
+        Antler,
+        Tooth,
+        SmallBone,
+        LargeBone,
+        RawMeat,
+        Steak,
+        Apple,
+        Berries
     }
 	
 }

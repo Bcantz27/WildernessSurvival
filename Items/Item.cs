@@ -8,17 +8,21 @@ public class Item {
     private bool _isStackable = false;
     private bool _isPlaceable = false;
     private bool _isWieldable = false;
+    private bool _isCookable = false;
+    private bool _isEatable = false;
     private int _itemsInStack;
 	
 	public Item() 
     {
 		_name = "No name";
         _itemsInStack = 1;
+        _itemType = ItemType.Material;
 	}
 	
 	public Item(string name) 
     {
 		_name = name;
+        _itemType = ItemType.Material;
 	}
 	
 	public string Name
@@ -49,6 +53,18 @@ public class Item {
     {
         get { return _isWieldable; }
         set { _isWieldable = value; }
+    }
+
+    public bool Cookable
+    {
+        get { return _isCookable; }
+        set { _isCookable = value; }
+    }
+
+    public bool Eatable
+    {
+        get { return _isEatable; }
+        set { _isEatable = value; }
     }
 
     public int ItemsInStack
@@ -98,6 +114,8 @@ public class Item {
         Wrist,
         //Materials
         Tool,
-        Material
+        Material,
+        //Consumables
+        Food
     }
 }

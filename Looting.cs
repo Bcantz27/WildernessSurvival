@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(BoxCollider))]
-[RequireComponent(typeof(AudioSource))]
+//[RequireComponent(typeof(AudioSource))]
 public class Looting : MonoBehaviour {
 	public enum State {
 		open,
@@ -23,6 +23,7 @@ public class Looting : MonoBehaviour {
 	
 	private GameObject _player;
 	private bool _used = false;
+    private bool _populated = false;
 	private Transform _myTransform;
 	
 	public List<Item> loot = new List<Item>();
@@ -64,50 +65,74 @@ public class Looting : MonoBehaviour {
 	}
 	
 	public void OnMouseEnter(){
-		HighLight(true);
+        if (!gameObject.GetComponent<MobInteract>()._mob.Alive)
+		    HighLight(true);
 	}
 	public void OnMouseExit(){
-		HighLight(false);
+        if (!gameObject.GetComponent<MobInteract>()._mob.Alive)
+		    HighLight(false);
 	}
 	public void OnMouseUp() {
-		GameObject go = GameObject.FindGameObjectWithTag("Player");
-		
-		if(go == null)
-			return;
-		
-		if(Vector3.Distance(_myTransform.position,go.transform.position) > _lootDistance && !inUse)
-			return;
-		
-		switch(state){
-		case State.open:
-			state = State.inbetween;
-			ForceClose();
-			break;
-		case State.close:
-            if (myGUI.loot != null)
+        if (!gameObject.GetComponent<MobInteract>()._mob.Alive)
+        {
+            GameObject go = GameObject.FindGameObjectWithTag("Player");
+
+            if (go == null)
+                return;
+
+            if (Vector3.Distance(_myTransform.position, go.transform.position) > _lootDistance && !inUse)
+                return;
+
+            switch (state)
             {
-                ForceClose();
-			}
-			state = State.inbetween;
-			StartCoroutine("Open");
-			break;
-		}
-		
-		if(state == State.close){
-			Open ();
-		}else{
-			Close();
-		}
+                case State.open:
+                    state = State.inbetween;
+                    ForceClose();
+                    break;
+                case State.close:
+                    if (loot != null)
+                    {
+                        ForceClose();
+                    }
+                    if (loot.Count > 0)
+                    {
+                        state = State.inbetween;
+                        StartCoroutine("Open");
+
+                    }
+                    else
+                    {
+                        if (!_populated)
+                        {
+                            PopulateByLootTable();
+                        }
+                    }
+                    break;
+            }
+
+            /*
+            if (state == State.close)
+            {
+                Open();
+            }
+            else
+            {
+                Close();
+            }
+             */
+        }
 	}
 	
 	private IEnumerator Open(){
        // myGUI.lootItems = this;
-		
+        Debug.Log("Opened");
 		_player = GameObject.FindGameObjectWithTag("Player");
 		inUse = true;
-		
-		if(!_used)
-			PopulateChest(_amountOfLoot);
+
+        if (!_used && !_populated && gameObject.tag != "Mob")
+        {
+            PopulateRandom(_amountOfLoot);
+        }
 		
 		switch(gameObject.tag){
 		case "Chest":
@@ -115,7 +140,11 @@ public class Looting : MonoBehaviour {
 			audio.PlayOneShot(openSound);
 			yield return new WaitForSeconds(animation["open"].length);
 			break;
-		case "Corpse":
+		case "Mob":
+            if (!_populated)
+            {
+                PopulateByLootTable();
+            }
 			yield return new WaitForSeconds(_lootDelay);
 			break;
 			
@@ -124,6 +153,7 @@ public class Looting : MonoBehaviour {
 		}
 		
 		state = State.open;
+        myGUI.loot = loot;
 		Messenger.Broadcast("DisplayLoot");
 	}
 	private IEnumerator Close(){
@@ -140,7 +170,7 @@ public class Looting : MonoBehaviour {
 			
 			yield return new WaitForSeconds(tempTimer);
 			break;
-		case "Corpse":
+		case "Mob":
 			yield return new WaitForSeconds(_lootDelay);
 			break;
 			
@@ -148,13 +178,20 @@ public class Looting : MonoBehaviour {
 			break;
 		}
 		state = State.close;
-		
-		if(loot.Count == 0 && gameObject.tag == "Corpse")
-			DestroyChest();
+
+        if (loot.Count == 0)
+        {
+            Debug.Log("Cleared");
+            loot = new List<Item>();
+            if (!gameObject.GetComponent<MobInteract>()._mob.Skinable)
+                DestroyChest();
+
+        }
+
 	}
 	
 	private void DestroyChest(){
-		loot = null;
+        loot = new List<Item>();
 		Destroy(gameObject);
 	}
 	
@@ -163,13 +200,35 @@ public class Looting : MonoBehaviour {
 		StopCoroutine("Open");
 		StartCoroutine("Close");
 	}
+
+    public void Populate(int amout, Crafting.ItemName item)
+    {
+        Item tempItem = Crafting.getItem(item);
+        if (amout > 1)
+        {
+            if (tempItem.Stackable)
+            {
+                tempItem.ItemsInStack = amout;
+            }
+        }
+        loot.Add(tempItem);
+        Debug.Log("Item: " + tempItem.Name);
+
+        _populated = true;
+    }
 	
-	private void PopulateChest(int x){
+	public void PopulateRandom(int x){
 		for(int cnt = 0; cnt < x; cnt++){
 			loot.Add(ItemGenerator.CreateRandomItem());
 		}
 		_used = true;
 	}
+
+    private void PopulateByLootTable()
+    {
+        loot = MobGenerator.getLootOfMob((Mob.MobName)gameObject.GetComponent<MobInteract>()._mob.Id);
+        _populated = true;
+    }
 	
 	private void HighLight(bool glow){
 		if(glow){

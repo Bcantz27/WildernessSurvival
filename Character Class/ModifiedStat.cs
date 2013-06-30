@@ -71,6 +71,7 @@ public class ModifiedStat : BaseStat {
 }
 
 public struct ModifyingAttribute {
+
 	public Attribute attribute;
 	public float ratio;
 	

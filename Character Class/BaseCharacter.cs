@@ -3,37 +3,95 @@ using System.Collections;
 using System; // added to access the enum class
 
 public class BaseCharacter : MonoBehaviour {
+
 	private string _name;
 	private string _password;
 	private string _email;
 	private int _level;
 	private uint _freeExp;
 	
-	private Attribute[] _primaryAttribute;
-	private Vital[] _vital;
-	private Skill[] _skill;
-	
-	private int hungerMax = 100;
-	private int hungerCur = 100;
-	private int temperature = 98; // F
-	
-	
-	public int HungerMax {
-		get {return hungerMax; }
-		set{ hungerMax = value; }
-	}
-	
-	public int HungerCur {
-		get {return hungerCur; }
-		set{ hungerCur = value; }
-	}
+	public Attribute[] _primaryAttribute;
+    public Vital[] _vital;
+    public Skill[] _skill;
+
+    private float[] _tickTimer = {0,0}; //0 is Hunger timer 1 is Thist timer
+    private const float HUNGER_DECAY_THRESHHOLD = 10;
+    private const float THIRST_DECAY_THRESHHOLD = 7;
+
+	private int temperatureCur = 98; // F
+
+    private void OnEnable()
+    {
+        Messenger<int, float>.AddListener("player hunger change", ChangeVital);
+    }
+    private void OnDisable()
+    {
+        Messenger<int, float>.RemoveListener("player hunger change", ChangeVital);
+    }
+
+    public void ChangeVital(int index, float amount)
+    {
+        if (_vital[index].curValue + amount < _vital[index].maxValue)
+        {
+            _vital[index].curValue += amount;
+        }
+        else
+        {
+            Debug.Log("" + _vital[index].Name + " is Full.");
+            _vital[index].curValue = _vital[index].maxValue;
+        }
+    }
+
+    //Setters and Getters
+    public string Name
+    {
+        get { return _name; }
+        set { _name = value; }
+    }
+
+    public string Email
+    {
+        get { return _email; }
+        set { _email = value; }
+    }
+
+    public string Password
+    {
+        get { return _password; }
+        set { _password = value; }
+    }
+
+    public int Level
+    {
+        get { return _level; }
+        set { _level = value; }
+    }
+
+    public uint FreeExp
+    {
+        get { return _freeExp; }
+        set { _freeExp = value; }
+    }
+
+    public void AddExp(uint exp)
+    {
+        _freeExp += exp;
+
+        CalculateLevel();
+    }
 	
 	public int Temperature {
-		get {return temperature; }
-		set{ temperature = value; }
+        get { return temperatureCur; }
+        set { temperatureCur = value; }
 	}
+
+    public Vital[] getVitalList()
+    {
+        return _vital;
+    }
 	
 	public void Awake() {
+
 		_name = string.Empty;
 		_email = string.Empty;
 		_level = 0;
@@ -56,40 +114,54 @@ public class BaseCharacter : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+        _tickTimer[0] += Time.deltaTime;
+        _tickTimer[1] += Time.deltaTime;
+
+        if (_tickTimer[0] >= HUNGER_DECAY_THRESHHOLD)
+        {
+            decayHunger();
+            _tickTimer[0] = 0;
+        }
+
+        if (_tickTimer[1] >= THIRST_DECAY_THRESHHOLD)
+        {
+            decayThirst();
+            _tickTimer[1] = 0;
+        }
+
+        Messenger<float, float>.Broadcast("player health update", GetVital(0).curValue, GetVital(0).maxValue, MessengerMode.DONT_REQUIRE_LISTENER);
+        Messenger<float, float>.Broadcast("player energy update", GetVital(1).curValue, GetVital(1).maxValue, MessengerMode.DONT_REQUIRE_LISTENER);
+        Messenger<float, float>.Broadcast("player hunger update", _vital[2].curValue, _vital[2].maxValue, MessengerMode.DONT_REQUIRE_LISTENER);
+        Messenger<float, float>.Broadcast("player thirst update", _vital[3].curValue, _vital[3].maxValue, MessengerMode.DONT_REQUIRE_LISTENER);
 	}
-	
-	//Setters and Getters
-	public string Name{
-		get{ return _name; }
-		set{ _name = value; }
-	}
-	
-	public string Email{
-		get{ return _email; }
-		set{ _email = value; }
-	}
-	
-	public string Password{
-		get{ return _password; }
-		set{ _password = value; }
-	}
-	
-	public int Level{
-		get{ return _level; }
-		set{ _level = value; }
-	}
-	
-	public uint FreeExp{
-		get{ return _freeExp; }
-		set{ _freeExp = value; }
-	}
-	
-	public void AddExp(uint exp) {
-			_freeExp += exp;
-		
-		CalculateLevel();
-	}
+
+    public void decayHunger()
+    {
+        if (_vital[2].curValue - 1 >= 0)
+        {
+            _vital[2].curValue -= 1;
+        }
+        else
+        {
+            _vital[2].curValue = 0;
+        }
+        
+        //Debug.Log("Hunger: " + hungerCur);
+    }
+
+    public void decayThirst()
+    {
+        if (_vital[3].curValue - 1 >= 0)
+        {
+            _vital[3].curValue -= 1;
+        }
+        else
+        {
+            _vital[3].curValue = 0;
+        }
+        
+        //Debug.Log("Thirst: " + thirstCur);
+    }
 	
 	public void CalculateLevel() {
 		//find a way to display level with all stats
@@ -121,9 +193,14 @@ public class BaseCharacter : MonoBehaviour {
 	public Attribute GetPrimaryAttribute(int index) {
 		return _primaryAttribute[index];	
 	}
-	
-	public Vital GetVital(int index) {
-		return _vital[index];	
+
+    public Vital GetVital(int index)
+    {
+        return _vital[index];
+    }
+
+    public int GetVitalLength() {
+		return _vital.Length;	
 	}
 	
 	public Skill GetSkill(int index) {

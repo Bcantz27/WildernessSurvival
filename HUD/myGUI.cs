@@ -37,14 +37,29 @@ public class myGUI : MonoBehaviour {
 	private const float DOUBLE_CLICK_TIMER_THRESHHOLD = .5f;
 	private Item _selectedItem;
 
+
+    //*****************************************//
+    /*  Dragging Vars
+    //*****************************************/
     private bool dragging = false;
     private GameObject placeableObject;
     private GameObject draggingObj;
     private Item placeableItem;
+    private Item draggingItem;
 
     private RaycastHit hit;
     private Ray ray;
 
+    //*****************************************//
+    /*  Oven Window Vars
+    //*****************************************/
+    private bool _displayOvenWindow = false;
+    private const int OVEN_WINDOW_ID = 4;
+    private Rect _ovenWindowRect = new Rect(10, 10, 256, 256);
+
+    private Rect fuelRect;
+    private Rect foodRect;
+    private Rect cookedRect;
 
     //*****************************************//
     /*  Crafting Window Vars
@@ -66,36 +81,49 @@ public class myGUI : MonoBehaviour {
 	private Rect _characterWindowRect = new Rect(10,10,500,300);
 	private int _characterPanel = 0;
 	private string[] _characterPanelNames = new string[] {"Equiptment","Attributes","Skills"};
-	
-	
+
+
+    public GUISkin GUISkin
+    {
+        get { return mySkin; }
+        set { mySkin = value; }
+    }
+
 	// Use this for initialization
 	void Start () {
         craftableItems = Crafting.getCraftableItems(PlayerCharacter.Inventory);
+        fuelRect = new Rect(100, 50, buttonWidth, buttonHeight);
+        foodRect = new Rect(50, 100, buttonWidth, buttonHeight);
+        cookedRect = new Rect(150, 100, buttonWidth, buttonHeight);
 	}
 	
 	private void OnEnable() {
+
 		Messenger.AddListener("DisplayLoot",DisplayLoot);
 		Messenger.AddListener("CloseChest",ClearWindow);
 		Messenger.AddListener("ToggleInventory",ToggleInventoryWindow);
 		Messenger.AddListener("ToggleCharacter",ToggleCharacterWindow);
         Messenger.AddListener("ToggleCrafting", ToggleCraftingWindow);
+        Messenger.AddListener("ToggleOven", ToggleOvenWindow);
 	}
 	private void OnDisable() {
+
 		Messenger.RemoveListener("DisplayLoot",DisplayLoot);
 		Messenger.RemoveListener("CloseChest",ClearWindow);
 		Messenger.RemoveListener("ToggleInventory",ToggleInventoryWindow);
 		Messenger.RemoveListener("ToggleCharacter",ToggleCharacterWindow);
         Messenger.RemoveListener("ToggleCrafting", ToggleCraftingWindow);
+        Messenger.RemoveListener("ToggleOven", ToggleOvenWindow);
 	}
 	
 	// Update is called once per frame
 	void Update () {
         if (dragging)
         {
-            OnMouseDrag();
+            OnMouseDragItemPlace();
         }
-        dragDetection();
 
+        dragDetection();
 	}
 	
 	void OnGUI(){
@@ -109,6 +137,9 @@ public class myGUI : MonoBehaviour {
 			_inventoryWindowRect = GUI.Window(INVENTORY_WINDOW_ID, _inventoryWindowRect, InventoryWindow,"Inventory","Character Window");
         if (_displayCraftingWindow)
             _craftingWindowRect = GUI.Window(CRAFTING_WINDOW_ID, _craftingWindowRect, CraftingWindow, "Crafting", "Character Window");
+        if (_displayOvenWindow)
+            _ovenWindowRect = GUI.Window(OVEN_WINDOW_ID, _ovenWindowRect, OvenWindow, "", "Character Window");
+
 		DisplayToolTip();
 	}
 	
@@ -117,6 +148,7 @@ public class myGUI : MonoBehaviour {
 	}
 	
 	private void ClearWindow(){
+        Debug.Log("Closed Loot");
 		_displayLootWindow = false;
 	}
 	
@@ -177,7 +209,7 @@ public class myGUI : MonoBehaviour {
                     {
                         Crafting.getRecipeItemsAndRemove(Crafting.recipeList[j]);
                         Debug.Log("Removed Items");
-                        Crafting.givePlayerItem(craftableItems[i].Id, 1);
+                        Crafting.givePlayerItem((Crafting.ItemName)craftableItems[i].Id, 1);
                         craftableItems = Crafting.getCraftableItems(PlayerCharacter.Inventory);
                     }
                 }
@@ -187,43 +219,136 @@ public class myGUI : MonoBehaviour {
         GUI.DragWindow();
     }
 
+
     public void dragDetection()
     {
+        Vector2 mousePos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y); 
         if (Input.GetMouseButtonDown(0))
         {
-            if (!dragging && _inventoryWindowRect.Contains(Input.mousePosition) && placeableItem != null)
+            if (!dragging && _inventoryWindowRect.Contains(mousePos))
             {
-                placeableObject = Resources.Load("Placeables/" + placeableItem.Name.ToString()) as GameObject;
-                draggingObj = GameObject.Instantiate(placeableObject) as GameObject;
-                Debug.Log("OBJ");
+                if (placeableItem != null)
+                {
+                    placeableObject = Resources.Load("Placeables/" + placeableItem.Name.ToString()) as GameObject;
+                    draggingObj = GameObject.Instantiate(placeableObject) as GameObject;
+                    Debug.Log("OBJ");
+                }
                 dragging = true;
             }
         }
 
         if (Input.GetMouseButtonUp(0))
         {
-                if (dragging && placeableItem != null)
+            if (dragging)
+            {
+                if (_ovenWindowRect.Contains(mousePos) && _displayOvenWindow)
                 {
-                    Crafting.removePlayerItem(placeableItem.Id, 1);
-                    placeableItem = null;
-                    dragging = false;
-                     if (_inventoryWindowRect.Contains(Input.mousePosition))
-                     {
-                         //Do Item Dragging here
-                         Destroy(draggingObj);
-                     }
-                     else
-                     {
-                         draggingObj = null;
-                         placeableObject = null;
-                     }
+                    Debug.Log("In Oven");
+                    if (fuelRect.Contains(mousePos))
+                    {
+                        Debug.Log("Fuel");
+                        if (Oven.currentOven.FuelItem == null)
+                        {
+                            if (draggingItem.ItemsInStack > Oven.currentOven.MaxFuelStorage)
+                            {
+                                Item temp = Crafting.getItem((Crafting.ItemName)draggingItem.Id);
+                                temp.ItemsInStack = draggingItem.ItemsInStack - Oven.currentOven.MaxFuelStorage;
+                                Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                                Crafting.givePlayerItem((Crafting.ItemName)temp.Id, temp.ItemsInStack);
+                                draggingItem.ItemsInStack = Oven.currentOven.MaxFuelStorage;
+                                Oven.currentOven.FuelItem = draggingItem;
+                            }
+                            else
+                            {
+                                Oven.currentOven.FuelItem = draggingItem;
+                                Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                                //Debug.Log("Dragging Item Name: " + draggingItem.Name.ToString());
+                            }
+                        }
+                        else
+                        {
+                            if (draggingItem.ItemsInStack > Oven.currentOven.MaxFuelStorage)
+                            {
+                                Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                                Crafting.givePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack - Oven.currentOven.MaxFuelStorage);
+                                Crafting.givePlayerItem((Crafting.ItemName)Oven.currentOven.FuelItem.Id, Oven.currentOven.FuelItem.ItemsInStack);
+                                draggingItem.ItemsInStack = Oven.currentOven.MaxFuelStorage;
+                                Oven.currentOven.FuelItem = draggingItem;
+                            }
+                            else
+                            {
+                                Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                                Crafting.givePlayerItem((Crafting.ItemName)Oven.currentOven.FuelItem.Id, Oven.currentOven.FuelItem.ItemsInStack);
+                                Oven.currentOven.FuelItem = draggingItem;
+                            }
+                            //Debug.Log("Dragging Item Name: " + draggingItem.Name.ToString());
+                            //Debug.Log("Fuel Item Name: " + Oven.currentOven.FuelItem.Name.ToString());
+                        }
+                    }
+                    else if (foodRect.Contains(mousePos))
+                    {
+                        Debug.Log("Food");
+                        if (Oven.currentOven.FoodItem == null)
+                        {
+
+                            Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                            Oven.currentOven.FoodItem = draggingItem;
+                            //Debug.Log("Dragging Item Name: " + draggingItem.Name.ToString());
+                        }
+                        else
+                        {
+                            //Debug.Log("Dragging Item Name: " + draggingItem.Name.ToString());
+                            //Debug.Log("Fuel Item Name: " + Oven.currentOven.FoodItem.Name.ToString());
+                            Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                            Crafting.givePlayerItem((Crafting.ItemName)Oven.currentOven.FoodItem.Id, Oven.currentOven.FoodItem.ItemsInStack);
+                            Oven.currentOven.FoodItem = draggingItem;
+                        }
+                    }
+                    else if (cookedRect.Contains(mousePos))
+                    {
+                        Debug.Log("Cooked");
+                        if (Oven.currentOven.CookedItem == null)
+                        {
+
+                            Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                            Oven.currentOven.CookedItem = draggingItem;
+                            //Debug.Log("Dragging Item Name: " + draggingItem.Name.ToString());
+                        }
+                        else
+                        {
+                            //Debug.Log("Dragging Item Name: " + draggingItem.Name.ToString());
+                            //Debug.Log("Fuel Item Name: " + Oven.currentOven.CookedItem.Name.ToString());
+                            Crafting.removePlayerItem((Crafting.ItemName)draggingItem.Id, draggingItem.ItemsInStack);
+                            Crafting.givePlayerItem((Crafting.ItemName)Oven.currentOven.CookedItem.Id, Oven.currentOven.CookedItem.ItemsInStack);
+                            Oven.currentOven.CookedItem = draggingItem;
+                        }
+                    }
                 }
 
+                if (placeableItem != null)
+                {
+                    Crafting.removePlayerItem((Crafting.ItemName)placeableItem.Id, 1);
+                    placeableItem = null;
+                    if (_inventoryWindowRect.Contains(mousePos))
+                    {
+                        Destroy(draggingObj);
+                        draggingObj = null;
+                        //Do inventory item dragging here
+                    }
+                    else
+                    {
+                        draggingObj = null;
+                        placeableObject = null;
+                    }
+                }
+                draggingItem = null;
+                dragging = false;
+            }
         }
     }
 
 
-    private void OnMouseDrag()
+    private void OnMouseDragItemPlace()
     {
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out hit, 25) && hit.collider.GetType() == typeof(TerrainCollider))
@@ -235,6 +360,67 @@ public class myGUI : MonoBehaviour {
                 draggingObj.transform.position = hit.point;
             }
         }
+    }
+
+    private void OvenWindow(int id)
+    {
+        GUI.skin = mySkin;
+
+        if (GUI.Button(new Rect(_ovenWindowRect.width - 22, 2, closeButtonWidth, closeButtonHeight), "", "X Button"))
+        {
+            _displayOvenWindow = false;
+        }
+
+        if (Oven.currentOven.FuelItem == null)
+        {
+            GUI.Label(fuelRect, "", "Inventory Slot Empty");
+        }
+        else
+        {
+            if (GUI.Button(fuelRect, new GUIContent(Oven.currentOven.FuelItem.Icon, Oven.currentOven.FuelItem.ToolTip()), getSlotSkin()))
+            {
+                Debug.Log("Test");
+            }
+            if (Oven.currentOven.FuelItem.Stackable)
+            {
+                GUI.Label(fuelRect, Oven.currentOven.FuelItem.ItemsInStack.ToString(), "Inventory Slot Empty");
+            }
+        }
+
+        if (Oven.currentOven.FoodItem == null)
+        {
+            GUI.Label(foodRect, "", "Inventory Slot Empty");
+        }
+        else
+        {
+            if (GUI.Button(foodRect, new GUIContent(Oven.currentOven.FoodItem.Icon, Oven.currentOven.FoodItem.ToolTip()), getSlotSkin()))
+            {
+
+            }
+            if (Oven.currentOven.FoodItem.Stackable)
+            {
+                GUI.Label(foodRect, Oven.currentOven.FoodItem.ItemsInStack.ToString(), "Inventory Slot Empty");
+            }
+        }
+
+        if (Oven.currentOven.CookedItem == null)
+        {
+            GUI.Label(cookedRect, "", "Inventory Slot Empty");
+        }
+        else
+        {
+            if (GUI.Button(cookedRect, new GUIContent(Oven.currentOven.CookedItem.Icon, Oven.currentOven.CookedItem.ToolTip()), getSlotSkin()))
+            {
+
+            }
+            if (Oven.currentOven.CookedItem.Stackable)
+            {
+                GUI.Label(cookedRect, Oven.currentOven.CookedItem.ItemsInStack.ToString(), "Inventory Slot Empty");
+            }
+        }
+
+        GUI.DragWindow();
+
     }
 
     public void InventoryWindow(int id)
@@ -249,6 +435,10 @@ public class myGUI : MonoBehaviour {
                     Rect rect = new Rect(5 + (x * buttonWidth), 20 + (y * buttonHeight), buttonWidth, buttonHeight);
                     if (rect.Contains(Event.current.mousePosition))
                     {
+                        if (draggingItem == null)
+                        {
+                            draggingItem = PlayerCharacter.Inventory[cnt];
+                        }
                         if (PlayerCharacter.Inventory[cnt].Placeable)
                         {
                             if (placeableItem == null)
@@ -266,6 +456,24 @@ public class myGUI : MonoBehaviour {
 							if(Time.time - _doubleClickTimer < DOUBLE_CLICK_TIMER_THRESHHOLD){
 								#region DoubleClick Selectors
 								switch(_selectedItem.Type){
+                                    case Item.ItemType.Food:
+                                        PlayerCharacter.eatFood((Food)PlayerCharacter.Inventory[cnt]);
+                                        if (PlayerCharacter.Inventory[cnt].Stackable)
+                                        {
+                                            if (PlayerCharacter.Inventory[cnt].ItemsInStack > 1)
+                                            {
+                                                PlayerCharacter.Inventory[cnt].ItemsInStack--;
+                                            }
+                                            else
+                                            {
+                                                PlayerCharacter.Inventory.RemoveAt(cnt);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            PlayerCharacter.Inventory.RemoveAt(cnt);
+                                        }
+                                        break;
                                     case Item.ItemType.OneHanded:
 										if(PlayerCharacter.RightHand == null){
 											PlayerCharacter.RightHand = PlayerCharacter.Inventory[cnt];
@@ -412,6 +620,11 @@ public class myGUI : MonoBehaviour {
 											PlayerCharacter.Inventory[cnt] = temp;
 										}
 									break;
+
+                                    default:
+                                        Debug.Log("No Double Click");
+                                        break;
+
 									
 								}
 								#endregion
@@ -443,12 +656,18 @@ public class myGUI : MonoBehaviour {
 		_displayInventoryWindow = !_displayInventoryWindow;
 	}
 
+    public void ToggleOvenWindow()
+    {
+        _displayOvenWindow = !_displayOvenWindow;
+    }
+
     public void ToggleCraftingWindow()
     {
-        Crafting.givePlayerItem(1, 20);
-        Crafting.givePlayerItem(2, 20);
-        Crafting.givePlayerItem(5, 20);
-        Crafting.givePlayerItem(7, 20);
+        Crafting.givePlayerItem(Crafting.ItemName.WoodLog, 20);
+        Crafting.givePlayerItem(Crafting.ItemName.SmallRock, 20);
+        Crafting.givePlayerItem(Crafting.ItemName.LargeRock, 20);
+        Crafting.givePlayerItem(Crafting.ItemName.Vine, 20);
+
         if (_displayCraftingWindow)
         {
             craftableItems = Crafting.getCraftableItems(PlayerCharacter.Inventory);
@@ -494,10 +713,10 @@ public class myGUI : MonoBehaviour {
 	
 	private void DisplayToolTip(){
 		if(_toolTip != ""){
-			if(Input.mousePosition.x <= Screen.width - 205){
-				GUI.Box(new Rect(Input.mousePosition.x-Screen.width/2+400, -(Input.mousePosition.y-Screen.height/2)+200, 200, 100), _toolTip);
+			if(Event.current.mousePosition.x <= Screen.width - 205){
+                GUI.Box(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y - 100, 200, 100), _toolTip);
 			}else{
-				GUI.Box(new Rect(Input.mousePosition.x-Screen.width/2+200, -(Input.mousePosition.y-Screen.height/2)+200, 200, 100), _toolTip);
+                GUI.Box(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y - 100, 200, 100), _toolTip);
 			}
 		}
 		

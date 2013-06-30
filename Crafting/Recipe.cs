@@ -10,7 +10,7 @@ public class Recipe : MonoBehaviour {
     public Recipe()
     {
         _name = "No Name";
-        _components.Add(1,1);
+        _components.Add(Crafting.ItemName.WoodLog,1);
     }
 
     public Recipe(string name, Hashtable components,Item CraftedItem)

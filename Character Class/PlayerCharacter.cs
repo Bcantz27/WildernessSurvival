@@ -3,11 +3,16 @@ using UnityEngine;
 
 public class PlayerCharacter : BaseCharacter {
 	public static GameObject[] _weaponMesh;
-	
+
 	private static List<Item> _inventory = new List<Item>();
 	public static List<Item> Inventory{
 		get{ return _inventory; }
 	}
+
+    private static float[] _nutrition = new float[3];
+    // 1: Carbs
+    // 2: Protien
+    // 3: Fat
 	
 	private static Item _rightHand;
 	private static Item _leftHand;
@@ -283,6 +288,13 @@ public class PlayerCharacter : BaseCharacter {
 	}
 	
 	void Awake() {
+
+        for (int i = 0; i < _nutrition.Length; i++)
+        {
+            _nutrition[i] = 0;
+        }
+
+
 		Transform weaponMount = transform.Find ("Right Hand Weapon Mount");
 		if(weaponMount != null){
 			int count = weaponMount.GetChildCount();
@@ -299,7 +311,7 @@ public class PlayerCharacter : BaseCharacter {
 	}
 	
 	void Update() {
-		Messenger<int, int>.Broadcast("player health update", 100, 100, MessengerMode.DONT_REQUIRE_LISTENER);
+
 	}
 	private static void HideWeaponMeshes(){
 		/*
@@ -308,6 +320,21 @@ public class PlayerCharacter : BaseCharacter {
 		}
 		*/
 	}
+
+    public static void eatFood(Food food)
+    {
+        _nutrition[0] += food.Carbs;
+        _nutrition[1] += food.Protein;
+        _nutrition[2] += food.Fat;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if(food.getHealAtIndex(i) != 0)
+                Messenger<int, float>.Broadcast("player hunger change", i, food.getHealAtIndex(i), MessengerMode.DONT_REQUIRE_LISTENER);
+        }
+
+        Debug.Log("Carbs: " + _nutrition[0] + "\n" + "Protein: " + _nutrition[1] + "\n" + "Fat: " + _nutrition[2]);
+    }
 
     public static bool checkInventoryForItem(int id, int amount)
     {

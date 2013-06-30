@@ -69,7 +69,7 @@ public class Targetting : MonoBehaviour {
 		
 		name.GetComponent<TextMesh>().text = selectedTarget.GetComponent<Mob>().Name;
 		name.GetComponent<MeshRenderer>().enabled = true;
-		selectedTarget.GetComponent<Mob>().DisplayHealth();
+		//selectedTarget.GetComponent<Mob>().DisplayHealth();
 		
 		Messenger<bool>.Broadcast("show mob vitalbar", true);
 
